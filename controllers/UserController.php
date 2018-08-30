@@ -8,6 +8,8 @@
             // 取模型里的数据
             $user = new User;
             $name = $user->getName();
+
+            echo 11111;
             
             // 加载视图
             view('users.hello',[
