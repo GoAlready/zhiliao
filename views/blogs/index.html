@@ -55,7 +55,7 @@
         <?php foreach($data as $v) : ?>
         <tr>
             <td><?=$v['id']?></td>
-            <td><?=$v['title']?></td>
+            <td><a href="/contents/<?=$v['id']?>.html" ><?=$v['title']?></a></td>
             <td><?=$v['created_at']?></td>
             <td><?=$v['updated_at']?></td>
             <td><?=$v['display']?></td>
