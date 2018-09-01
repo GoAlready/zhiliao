@@ -30,6 +30,23 @@
     $C = new $fullController;
     $C ->$action();
 
+    // 获取url上的所有参数,并且还能排除某些参数
+    function getUrlParams($except = [])
+    {
+        // 循环删除已有变量
+        foreach($except as $v)
+        {
+            unset($_GET[$v]);
+        }
+        // 拼出字符串，循环出地址栏所有变量
+        $str = '' ;
+        foreach($_GET as $k => $v)
+        {
+            $str .= "$k=$v&"; 
+        }
+        return $str;
+    }
+
     // 加载视图
     function view($viewFileName,$data=[]){
         // 解压书组成变量
