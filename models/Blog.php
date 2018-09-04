@@ -11,7 +11,7 @@
         public function __construct()
         {
              // 取日志数据
-             $this->pdo = new PDO('mysql:host=127.0.0.1;dbname=blog','root','123');
+             $this->pdo = new PDO('mysql:host=127.0.0.1;dbname=blog','root','123456');
              $this->pdo->exec('set names utf8');
         }
         // 搜索日志
@@ -136,6 +136,56 @@
 
             // 把页面的内容生成一个静态页
             file_put_contents(ROOT.'public/index.html',$str);
+        }
+        // 从数据库取出日志的浏览量
+
+        public function getDisplay($id)
+        {   
+            // 接收日志id
+            $id = (int)$_GET['id'];
+            // 连接redis
+            $redis = new \Predis\Client([
+                'scheme' => 'tcp',
+                'host'   => '127.0.0.1',
+                'port'   => 6379,
+            ]);
+
+            // 判断redis中是否有这个日志的浏览量
+            $key = "blog-{$id}";  //拼出日志的键
+            if($redis->hexists('blog_displays',$key))
+            {
+                $newNum = $redis->hincrby('blog_displays',$key,1);
+                return $newNum;
+            }
+            else
+            {
+                $stmt = $this->pdo->prepare('select display from blogs where id=?');
+                $stmt->execute([$id]);
+                $display =  $stmt->fetch(PDO::FETCH_COLUMN);
+                $display ++;
+                // 保存到redis
+                $redis->hset('blog_displays',$key,$display);
+                return $display;
+            }
+        }
+
+        public function displayToDb()
+        {
+            // 1.先取出内存中的所有的浏览量
+            // 连接 redis
+            $redis = new \Predis\Client([
+                'scheme' => 'tcp',
+                'host'   => '127.0.0.1',
+                'port'   => 6379,
+            ]);
+            $data = $redis->hgetall('blog_displays');
+            // 更新回数据库
+            foreach($data as $k => $v)
+            {
+                $id = str_replace('blog-','',$k);
+                $sql = "update blogs set display={$v} where id = {$id}";
+                $this->pdo->exec($sql);
+            }
         }
     }
 ?>

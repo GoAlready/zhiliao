@@ -8,6 +8,30 @@
 </head>
 <body>
     <h1><?=$blog['title']?></h1>
+    <p>浏览量:<span id="display"></span></p>
     <p><?=$blog['content']?></p>
 </body>
 </html>
+
+<script
+    src="https://code.jquery.com/jquery-3.3.1.min.js"
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+    crossorigin="anonymous"></script>
+<script>
+    // 更新获取浏览量
+
+    // 获取当前日志的id
+    var id = "<?=$blog['id']?>";
+    // 定义接口地址
+    var url = "/blog/display?id=" + id;
+    // 请求这个地址
+    $.ajax({
+       type:"GET",
+       url:url,
+       success:function(data)
+       {
+        //    把返回的浏览量放到页面
+        $("#display").html(data);
+       } 
+    });
+</script>

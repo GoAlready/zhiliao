@@ -26,5 +26,20 @@
             $blog = new Blog;
             $blog->index2html();
         }
+
+        public function display()
+        {
+            // 接收日志id
+            $id = (int)$_GET['id'];
+            $blog = new Blog;
+
+            echo $blog->getDisplay($id);
+        }
+
+        public function displayToDb()
+        {
+            $blog = new Blog;
+            $blog->displayToDb();
+        }
     }
 ?>
