@@ -1,4 +1,13 @@
 <?php
+    
+    // 使用 redis 保存 SESSION
+    ini_set('session.save_handler', 'redis'); 
+    // 设置 redis 服务器的地址、端口、使用的数据库      
+    ini_set('session.save_path', 'tcp://127.0.0.1:6379?database=3');  
+    // 设置 SESSION 10分钟过期
+    ini_set('session.gc_maxlifetime', 600);   
+    // 开启session
+    session_start();
     // 定义常量
     define('ROOT', dirname(__FILE__) . '/../');
 
@@ -69,6 +78,22 @@
         $path = str_replace('.', '/', $viewFileName) . '.html';
 
         require(ROOT . 'views/' . $path);
+    }
+
+    // 获取配置文件(无论调用多少次,只包含一次配置文件)
+    // 静态局部变量:函数执行结束也不会销毁,直到脚本结束
+    // 普通局部变量:函数执行完就销毁了
+    function config($name)
+    {
+        static $config = null;
+        if($config === null)
+        {
+            // 引入配置文件
+            $config = require(ROOT.'config.php');
+        }
+        
+
+        return $config[$name];
     }
 
 ?>

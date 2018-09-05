@@ -3,17 +3,8 @@
 
     use PDO;
 
-    class Blog
+    class Blog extends Base
     {
-        // 保存pdo对象
-        public $pdo;
-
-        public function __construct()
-        {
-             // 取日志数据
-             $this->pdo = new PDO('mysql:host=127.0.0.1;dbname=blog','root','123456');
-             $this->pdo->exec('set names utf8');
-        }
         // 搜索日志
         public function search()
         {
@@ -67,7 +58,7 @@
             $offset = ($page-1) * $perpage;
             
             // 制作按钮,取出总记录数
-            $stmt = $this->pdo->prepare("select count(*) from blogs where $where");
+            $stmt = self::$pdo->prepare("select count(*) from blogs where $where");
             $stmt->execute($value);
             $count = $stmt->fetch(PDO::FETCH_COLUMN);
             // 计算总页数
@@ -83,7 +74,7 @@
             }
 
             // 预处理
-            $stmt = $this->pdo->prepare("select * from blogs where $where order by $odby $odway limit $offset,$perpage");
+            $stmt = self::$pdo->prepare("select * from blogs where $where order by $odby $odway limit $offset,$perpage");
             // 执行sql
             $stmt->execute($value);
             // 获取数据
@@ -97,7 +88,7 @@
 
         public function content2html(){
            
-            $stmt = $this->pdo->query("select * from blogs");
+            $stmt = self::$pdo->query("select * from blogs");
             $blogs = $stmt -> fetchAll(PDO::FETCH_ASSOC);
                 
             // 开启缓冲区
@@ -120,7 +111,7 @@
         public function index2html()
         {
             // 取前20条数据
-            $stmt = $this->pdo->query("select * from blogs where is_show = 1 order by id desc limit 20");
+            $stmt = self::$pdo->query("select * from blogs where is_show = 1 order by id desc limit 20");
             $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // 开启缓冲区
@@ -144,11 +135,7 @@
             // 接收日志id
             $id = (int)$_GET['id'];
             // 连接redis
-            $redis = new \Predis\Client([
-                'scheme' => 'tcp',
-                'host'   => '127.0.0.1',
-                'port'   => 6379,
-            ]);
+            $redis = \libs\Redis::getInstance();
 
             // 判断redis中是否有这个日志的浏览量
             $key = "blog-{$id}";  //拼出日志的键
@@ -159,7 +146,7 @@
             }
             else
             {
-                $stmt = $this->pdo->prepare('select display from blogs where id=?');
+                $stmt = self::$pdo->prepare('select display from blogs where id=?');
                 $stmt->execute([$id]);
                 $display =  $stmt->fetch(PDO::FETCH_COLUMN);
                 $display ++;
@@ -173,18 +160,15 @@
         {
             // 1.先取出内存中的所有的浏览量
             // 连接 redis
-            $redis = new \Predis\Client([
-                'scheme' => 'tcp',
-                'host'   => '127.0.0.1',
-                'port'   => 6379,
-            ]);
+            $redis = \libs\Redis::getInstance();
+
             $data = $redis->hgetall('blog_displays');
             // 更新回数据库
             foreach($data as $k => $v)
             {
                 $id = str_replace('blog-','',$k);
                 $sql = "update blogs set display={$v} where id = {$id}";
-                $this->pdo->exec($sql);
+                self::$pdo->exec($sql);
             }
         }
     }

@@ -2,6 +2,12 @@
     namespace controllers;
     class TestController
     {
+        public function testLog()
+        {
+            $log = new \libs\Log('email');
+
+            $log->log('发表成功！！');
+        }
         public function register()
         {
             // 注册成功
@@ -36,11 +42,7 @@
 
             echo "邮件程序已启动....等待中...";
 
-            $redis = new \Predis\Client([
-                'scheme' => 'tcp',
-                'host'   => '127.0.0.1',
-                'port'   => 6379,
-            ]);
+            $redis = \libs\Redis::getInstance();
 
             // 循环监听一个列表
             while(true)
@@ -81,8 +83,6 @@
             $ret = $mailer->send($message);
     
             var_dump( $ret );
-    
-                    
         }
     }
 ?>
