@@ -58,14 +58,24 @@
         <?php foreach($data as $v) : ?>
         <tr>
             <td><?=$v['id']?></td>
-            <td><a href="/contents/<?=$v['id']?>.html" ><?=$v['title']?></a></td>
+            <td style="word-break: break-all;">
+                <?php if($v['is_show'] == 1): ?>
+                    <a href="/contents/<?=$v['id']?>.html" ><?=e($v['title'])?></a>
+                <?php else: ?>
+                    <a href="/blog/content?id=<?=$v['id']?>" ><?=e($v['title'])?></a>
+                <?php endif; ?>  
+            </td>
             <td><?=$v['created_at']?></td>
             <td><?=$v['updated_at']?></td>
             <td><?=$v['display']?></td>
             <td><?=$v['is_show']?></td>
             <td>
-                <a href="">修改</a>
-                <a href="">删除</a>
+                <a href="/blog/edit?id=<?=$v['id']?>">修改</a>
+                <form action="/blog/delete" method="post">
+                    <?php csrf_field() ?>
+                    <input type="hidden" name="id" value="<?=$v['id']?>">
+                    <input type="submit" value="删除">
+                </form>
             </td>
         </tr>
         <?php endforeach; ?>

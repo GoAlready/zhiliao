@@ -4,6 +4,31 @@
     use models\User;
     
     class UserController {
+        public function doLogin()
+        {
+            $email = $_POST['email'];
+            $password = md5($_POST['password']);
+
+            $user = new \models\User;
+            if($user->login($email,$password))
+            {
+                message('登陆成功!',1,'/blog/index');
+            }
+            else
+            {
+                message('账号或者密码错误',1,'/user/login');
+            }
+        }
+
+        public function logout()
+        {
+            // 清空session
+            $_SESSION = [];
+
+            // 跳转
+            message('退出成功',2,'/');
+        }
+
         public function login()
         {
             view('users.login');

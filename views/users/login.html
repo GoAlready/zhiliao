@@ -10,6 +10,7 @@
     <?php view('common.nav') ?>
     <h1>登录</h1>
     <form action="/user/dologin" method="post">
+        <?php csrf_field() ?>
         <div>
             Email:
             <input type="text" name="email">

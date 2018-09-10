@@ -7,7 +7,8 @@
     <title><?=$blog['title']?></title>
 </head>
 <body>
-    <?php view('common.nav') ?>
+    <h1>智聊系统</h1>
+    <div id="menu"></div>
     <h1><?=$blog['title']?></h1>
     <p>浏览量:<span id="display"></span></p>
     <p><?=$blog['content']?></p>
@@ -30,10 +31,32 @@
     $.ajax({
        type:"GET",
        url:url,
+       dataType:'json', //服务器返回的是JSON (解析JSON)
        success:function(data)
        {
-        //    把返回的浏览量放到页面
-        $("#display").html(data);
+            //   把返回的浏览量放到页面
+            $("#display").html(data.display);
+
+            // 拼按钮的字符串
+            // 无论登录否都只有一个首页的按钮
+            var html = '<a href="/">首页</a>';
+            // 判断登录
+            if(data.email == '')
+            {
+                // js 中定义多行字符串时要使用 `(反引号)
+                html += ` <a href="/user/register">注册</a> 
+                        <a href="/user/login">登录</a>`;
+            }
+            else
+            {
+                html += data.email + 
+                        ` <a href="/blog/index">日志列表</a> 
+                        <a href="/blog/create">发表日志</a> 
+                        <a href="/user/login">退出</a>`;
+            }
+
+            // 获取id=menu的div并把按钮放进去
+            $("#menu").html(html);
        } 
     });
 </script>

@@ -8,6 +8,15 @@
     ini_set('session.gc_maxlifetime', 600);   
     // 开启session
     session_start();
+
+    // 如果用户以post方式访问网站,需要验证令牌(防止外站提交)
+    if($_SERVER['REQUEST_METHOD'] == 'POST')
+    {
+        if(!isset($_POST['_token']))
+            die('违法操作');
+        if($_POST['_token'] != $_SESSION['token'])
+            die('违法操作!');
+    }
     // 定义常量
     define('ROOT', dirname(__FILE__) . '/../');
 
@@ -96,4 +105,88 @@
         return $config[$name];
     }
 
+    // 跳转页面
+    function redirect($url)
+    {
+        header('Location:'.$url);
+        exit;
+    }
+    // 返回上一个页面
+    function back()
+    {
+        redirect($_SERVER['HTTP_REFERER']);
+    }
+
+    // 提示消息的函数
+    // type: 0 : alert  1:显示单独页面  2：在下一个页面显示
+    // $seconds只有在type=1的时候有效  代码几秒自动跳转
+    function message($message,$type,$url,$seconds=5)
+    {
+        if($type == 0)
+        {
+            echo "<script>alert('{$message}');location.href='{$url}';</script>";
+            exit;
+        }
+        else if($type == 1)
+        {
+            view('common.success',[
+                'message' => $message,
+                'url' => $url,
+                'seconds' => $seconds
+            ]);
+        }
+        else if($type == 2)
+        {
+            // 把消息保存到session
+            $_SESSION['_MESS_'] = $message;
+            // 跳转到下一个页面
+            redirect($url);
+        }
+    }
+
+    // 过滤XSS
+    function e($content)
+    {
+        return htmlspecialchars($content);
+    }
+
+    // 在线编辑器的过滤
+    function hpe($content)
+    {
+        // 一直保存在内存中(直到脚本结束)
+        static $purifier = null;
+        // 只有第一次调用才会创建新的对象
+        if($purifier === null)
+        {
+            $config = \HTMLPurifier_Config::createDefault();
+            $config->set('Core.Encoding', 'utf-8');
+            $config->set('HTML.Doctype', 'HTML 4.01 Transitional');
+            $config->set('Cache.SerializerPath', ROOT.'cache');
+            $config->set('HTML.Allowed', 'div,b,strong,i,em,a[href|title],ul,ol,ol[start],li,p[style],br,span[style],img[width|height|alt|src],*[style|class],pre,hr,code,h2,h3,h4,h5,h6,blockquote,del,table,thead,tbody,tr,th,td');
+            $config->set('CSS.AllowedProperties', 'font,font-size,font-weight,font-style,margin,width,height,font-family,text-decoration,padding-left,color,background-color,text-align');
+            $config->set('AutoFormat.AutoParagraph', TRUE);
+            $config->set('AutoFormat.RemoveEmpty', TRUE);
+            $purifier = new \HTMLPurifier($config);
+        }
+        return $purifier->purify($content);
+    }
+    
+    // csrf防御
+    function csrf()
+    {
+        if(!($_SESSION['token']))
+        {
+            // 生成一个随机的字符串
+            $token = md5(rand(1,99999).microtime());
+            $_SESSION['token'] = $token;
+        }
+        return $_SESSION['token'];
+    }
+
+    // 生成令牌隐藏域
+    function csrf_field()
+    {
+        $csrf = isset($_SESSION['token']) ? $_SESSION['token'] : csrf();
+        echo "<input type='hidden' name='_token' value='{$csrf}'>";
+    }
 ?>

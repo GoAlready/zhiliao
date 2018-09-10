@@ -5,11 +5,91 @@
 
     class Blog extends Base
     {
+        // 在修改删除时日志生成静态页
+        public function makeHtml($id)
+        {
+            // 取出日志信息
+            $blog = $this->find($id);
+            // 打开缓冲区,并且加载视图到缓冲区
+            ob_start();
+
+            view('blogs.content',[
+                'blog'=>$blog,
+            ]);
+            // 从缓冲区取出视图并写到静态页中
+            $str = ob_get_clean();
+            file_put_contents(ROOT.'public/contents/'.$id.'.html',$str);
+        }
+        // 删除静态页
+        public function deleteHtml($id)
+        {
+            // @防止报错 有这个文件就删除 没有就不删除 不用报错
+            @unlink(ROOT.'public/contents/'.$id.'.html');
+        }
+        // 修改日志
+        public function find($id)
+        {
+            $stmt = self::$pdo->prepare('select * from blogs where id = ?');
+            $stmt -> execute([
+                $id
+            ]);
+            // 取出数据
+            return $stmt->fetch();
+        }
+
+        public function update($title,$content,$is_show,$id)
+        {
+            $stmt = self::$pdo->prepare("update blogs set title = ?,content = ?,is_show = ? where id = ?");
+            $ret = $stmt->execute([
+                $title,
+                $content,
+                $is_show,
+                $id,
+            ]);
+        }
+
+        // 获取最新20条
+        public function getNew()
+        {
+            $stmt = self::$pdo->query('SELECT * FROM blogs WHERE is_show=1 ORDER BY id DESC LIMIT 20');
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        public function delete($id)
+        {
+            // 只能删除自己的日志
+            $stmt = self::$pdo->prepare('delete from blogs where id=? and user_id=?');
+            $stmt->execute([
+                $id,
+                $_SESSION['id'],
+            ]);
+        }
+        public function add($title,$content,$is_show)
+        {
+            $stmt = self::$pdo->prepare("insert into blogs(title,content,is_show,user_id) values(?,?,?,?)");
+            $ret = $stmt->execute([
+                $title,
+                $content,
+                $is_show,
+                $_SESSION['id'],
+            ]);
+            if(!$ret)
+            {
+                echo '失败';
+                // 获取失败信息
+                $error = $stmt->errorInfo();
+                echo '<pre>';
+                var_dump($error);
+                exit;
+            }
+            // 返回新插入的记录的ID
+            return self::$pdo->lastInsertId();
+        }
         // 搜索日志
         public function search()
         {
             // 设置$where
-            $where = 1;
+            $where = 'user_id='.$_SESSION['id'];
             // 放预处理对应的值
             $value = [];
 
