@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <?php view('common.nav') ?>
+    <h1>图片上传</h1>
+
+    <form action="/user/setavatar" method="post" enctype="multipart/form-data">
+        <?=@csrf_field()?>
+        <div>
+            选择头像
+            <input type="file" name="avatar" id="img">
+        </div>
+        <br><br>
+        <div>
+            <input type="submit" value="提交">
+        </div>
+    </form>
+    <?php view('common.footer') ?>
+</body>
+</html>
+
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script>
+    var img = document.getElementById('img');
+    img.onchange = function()
+    {
+        // 获取选中的第一张图片
+        var img1 = this.files[0];
+        // 获取这张图片的尺寸
+        var fileSize = img1.size;
+        // 每一块的尺寸
+        var perSize = 4096; //4k
+        // 计算总的块数
+        var count = Math.ceil (fileSize / perSize);
+        // 为所有的分片生成一个随机的唯一的名字
+        var name = "img_"+Math.random(1,99999);
+        for(var i=0; i<count; i++)
+        {
+            var img0 = img1.slice(i*perSize,i*perSize+perSize);
+            // 创建一个FormData对象
+            var f = new FormData();
+            // 加入到表单中
+            f.append('img',img0);   //图片数据
+            f.append('count',count);   //总的块数
+            f.append('i',i);     //当前图片是第几块
+            f.append('size',perSize);   //每块的尺寸
+            f.append('img_name',name);  //名字 
+
+            // 上传的服务器
+            $.ajax({
+                type:"POST",
+                url:"/user/uploadbig",
+                data: f,
+                contentType:false,
+                processData: false,
+                success:function(data){
+
+                }
+            });
+        }
+    }
+</script>

@@ -89,7 +89,7 @@
         public function search()
         {
             // 设置$where
-            $where = 'user_id='.$_SESSION['id'];
+            @$where = 'user_id='.$_SESSION['id'];
             // 放预处理对应的值
             $value = [];
 

@@ -6,6 +6,98 @@
     
     class UserController 
     {
+        public function uploadbig()
+        {
+            // 接收提交的数据
+            $count = $_POST['count'];   //总的数量
+            $i = $_POST['i'];   //当前是第几块
+            $size = $_POST['size']; //每块的大小
+            $name = 'big_img_'.$_POST['img_name'];  // 所有分块的名字
+            $img = $_FILES['img'];  //图片
+            // 保存每个分块,防止两人同时上传文件名冲突
+            $dir = ROOT.'tmp/'.$name;
+            if(!is_dir($dir)){
+                mkdir($dir,true,0777);
+            }
+            move_uploaded_file($img['tmp_name'],ROOT.'tmp/'.$name."/".$i);
+            // 难点：因为每个分块到达服务器的顺序不固定，所以我们不能根据顺序来判断是否都上传成功。
+            // 实现思路：每上传一个就+1，直到上传的数量等于总的数量
+            $redis = \libs\Redis::getInstance();
+            // 每上传一张就加1
+            $uploadedCount = $redis->incr($name);
+            // 如果是最后一个分支就合并
+            if($uploadedCount == $count)
+            {
+                // 以追回的方式创建并打开最终的大文件
+                $fp = fopen(ROOT.'public/uploads/big/'.$name.'.png','a');
+                // 循环所有的分块
+                for($i=0;$i<$count;$i++)
+                {
+                    // 读取第i号文件并写到大文件中
+                    fwrite($fp,file_get_contents(ROOT.'tmp/'.$name."/".$i));
+                    // 删除第i号临时文件
+                    unlink(ROOT.'tmp/'.$name."/".$i);
+                }
+                // 关闭文件
+                fclose($fp);
+                // 从redis删除这个文件对应的编号这个变量
+                $redis->del($name);
+            }
+        }
+
+        public function uploadall()
+        {
+            // 保存图片的路径
+            $uploadDir = ROOT.'public/uploads/';
+            $date = date('Ymd');
+            // 如果没有这个目录就创建目录
+            if(!is_dir($uploadDir.$date))
+            {
+                // 创建目录（第二个参数：有写的权限（只对 Linux 系统)）
+                mkdir($uploadDir.$date, 0777);
+            }
+
+            // 循环五张图片的name
+            foreach($_FILES['images']['name'] as $k =>$v)
+            {
+                $name = md5( time() . rand(1,9999) );
+                $ext = strrchr($v,'.');
+                $name = $name . $ext;
+                // 根据下标找到对应文件的临时路径
+                move_uploaded_file($_FILES['images']['tmp_name'][$k],$uploadDir.$date.'/'.$name);
+                // echo $uploadDir.$date.'/'.$name.'<hr>';
+            }
+        }
+
+        public function album()
+        {
+            view('users.album');
+        }
+
+        public function setavatar()
+        {
+            // 保存图片的路径
+            $uploadDir = ROOT.'public/uploads/';
+            $date = date('Ymd');
+            if(!is_dir($uploadDir.$date))
+            {
+                mkdir($uploadDir.$date);
+            }
+            // 获取文件扩展名
+            $ext = strrchr($_FILES['avatar']['name'],'.') ;  //如: .jpg
+            //生成唯一的文件名
+            $name = md5( time() . rand(1,9999) );
+            // 完整文件名
+            $fullName = $uploadDir . '/' .$date . '/' . $name .$ext;
+            // 保存图片到指定路径
+            move_uploaded_file($_FILES['avatar']['tmp_name'],$fullName);
+
+        }
+
+        public function avatar()
+        {
+            view('users.avatar');
+        }
 
         public function money()
         {
