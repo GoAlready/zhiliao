@@ -2,6 +2,18 @@
     namespace controllers;
     class TestController
     {
+
+        // 测试生成订单号方法
+        public function testSnowflake()
+        {
+            $flake = new \libs\Snowflake(1013);
+
+            for($i=0;$i<10;$i++)
+            {
+                echo $flake->nextId().'<br>';
+            }
+        }
+
         public function testLog()
         {
             $log = new \libs\Log('email');

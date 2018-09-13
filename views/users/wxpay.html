@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+</head>
+<body>
+    <h1>扫码完成支付</h1>
+    <img src="/qrcode/qrcode?code=<?=$code?>" alt="">
+</body>
+</html>
+
+<script src="/simditor-2.3.6/scripts/jquery.min.js"></script>
+<script>
+    var sn = "<?=$sn?>";
+    function check()
+    {
+        $.ajax({
+           type:"GET",
+           url:"/user/orderStatus?sn="+sn,
+           success:function(data)
+           {
+               if(data == 1)
+               {
+                    alert("支付成功!");
+
+                    // 关闭页面
+                    window.close();
+               }
+               else
+               {
+                    // 1秒执行一次
+                    setTimeout(check,1000);
+               }
+           } 
+
+        });
+    }
+    setTimeout(check,1000);
+</script>

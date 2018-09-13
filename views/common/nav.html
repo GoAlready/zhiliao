@@ -1,3 +1,4 @@
+<script src="/simditor-2.3.6/scripts/jquery.min.js"></script>
 <?php if(isset($_SESSION['_MESS_'])):?>
 <div id="_mess_" style="border: 1px solid #25b952;background-color:#b9ecbd;padding:5px;">
     <?=$_SESSION['_MESS_']?>
@@ -25,11 +26,23 @@
 
 <?php if(isset($_SESSION['id'])) : ?>
 
+    <a href="/user/charge">充值</a>
+    <a href="/user/orders">充值列表</a>
     <a href="/blog/index">日志列表</a>
     <a href="/blog/create">发表日志</a>
 
 
     <?=$_SESSION['email']?>
+    ( <span id="span-money" style="color:#F00;font-weight:bold;"><?=$_SESSION['money']?></span> 元
+        <input id="update-money" type="button" value="更新余额">
+
+        <script>
+            $("#update-money").click(function(){
+                $("#span-money").load("/user/money");
+            });
+        </script>
+
+    ) 
     <a href="/user/logout">退出</a>
 
 <?php else: ?>

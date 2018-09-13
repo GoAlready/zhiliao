@@ -2,8 +2,44 @@
     namespace controllers;
 
     use models\User;
+    use models\Order;
     
-    class UserController {
+    class UserController 
+    {
+
+        public function money()
+        {
+            $user = new User;
+            echo $user->getMoney();
+
+        }
+
+        public function docharge()
+        {
+            // 生成订单
+            $money = $_POST['money'];
+            $model = new Order;
+            $model->create($money);
+            message('充值订单已生成,请立即支付!',2,'/user/orders');
+
+        }
+
+        public function orders()
+        {
+            $order = new Order;
+            // 调用搜索方法
+            $data = $order->search();
+
+
+            // 加载视图
+            view('users.order',$data);
+        }
+
+        public function charge()
+        {
+            view('users.charge');
+        }
+
         public function doLogin()
         {
             $email = $_POST['email'];
@@ -124,6 +160,30 @@
                 die('激活码无效');
             }
 
+        }
+
+        public function orderStatus()
+        {
+            $sn = $_GET['sn'];
+
+            // 获取的次数
+            $try = 10;
+            $model = new Order;
+
+            do{
+                // 查询订单信息
+                $info = $model->findBySn($sn);
+                // 如果订单未支付就等待一秒,并减少尝试的次数,如果已经支付就退出循环
+                if($info['status'] == 0)
+                {
+                    sleep(1);
+                    $try--;
+                }
+                else
+                    break;
+            }while($try>0);  // 如果尝试的次数到达指定的次数就退出循环
+
+            echo $info['status'];
         }
     }
 ?>

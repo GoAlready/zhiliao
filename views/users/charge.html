@@ -4,26 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>登录</title>
+    <title>充值</title>
 </head>
 <body>
     <?php view('common.nav') ?>
-    <h1>登录</h1>
-    <form action="/user/dologin" method="post">
+    <h1>充值</h1>
+
+    <form action="/user/docharge" method="post">
         <?=@csrf_field()?>
         <div>
-            Email:
-            <input type="text" name="email">
-        </div>
-        <div>
-            密码:
-            <input type="password" name="password">
+            充值金额:
+            <input type="text" name="money">元
         </div>
         <br><br>
         <div>
-            <input type="submit" value="登录">
+            <input type="submit" value="充值">
         </div>
-        <?php view('common.footer') ?>
     </form>
+    <?php view('common.footer') ?>
 </body>
 </html>

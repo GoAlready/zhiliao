@@ -68,7 +68,7 @@
             <td><?=$v['created_at']?></td>
             <td><?=$v['updated_at']?></td>
             <td><?=$v['display']?></td>
-            <td><?=$v['is_show']?></td>
+            <td><?= $v['is_show']==1 ? '显示':'不显示' ?></td>
             <td>
                 <a href="/blog/edit?id=<?=$v['id']?>">修改</a>
                 <form action="/blog/delete" method="post">
