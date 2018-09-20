@@ -1,5 +1,6 @@
 <?php
 return [
+    'mode' => 'dev',   //  dev：开发模式  pro:上线模式
     'redis' => [
         'scheme' => 'tcp',
         'host'   => '127.0.0.1',

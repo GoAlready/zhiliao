@@ -5,6 +5,40 @@
 
     class Blog extends Base
     {
+        public function agreeList($id)
+        {
+            // 取出点赞过这个日志的信息
+            $sql = 'SELECT b.id,b.email,b.avatar
+             FROM blog_agrees a
+              LEFT JOIN users b ON a.user_id = b.id
+               WHERE a.blog_id=?';
+            $stmt = self::$pdo->prepare($sql);
+            $stmt->execute([
+                $id
+            ]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        }
+        public function hasAgreed($id)
+        {
+            // 判断日志是否点过
+            $stmt = self::$pdo->prepare('select count(*) from blog_agrees where user_id=? and blog_id = ?');
+            $stmt->execute([
+                $_SESSION['id'],
+                $id
+            ]);
+            $count = $stmt->fetch(PDO::FETCH_COLUMN);
+            if($count == 1)
+            {
+                return false;
+            }
+            // 点赞
+            $stmt =   self::$pdo->prepare("insert into blog_agrees(user_id,blog_id) values(?,?)");
+            return $stmt->execute([
+                $_SESSION['id'],
+                $id
+            ]);
+        }
         // 在修改删除时日志生成静态页
         public function makeHtml($id)
         {

@@ -5,6 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title><?=$blog['title']?></title>
+    <style>
+        .agree-list {
+            border:1px solid skyblue;
+            padding: 0;
+            text-align: center;
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 1px solid skyblue;
+            padding: 5px;
+            margin-left: 20px;
+        }
+        .agree-list h3
+        {
+            background-color: #eee;
+            padding: 0px;
+            margin-top: 0px;
+            padding: 5px;
+        }
+
+        .comment-list {
+            border: 1px solid skyblue;
+            margin-top: 10px;
+            padding: 10px;
+        }
+        .comment-list .left {
+            text-align: center;
+            float: left;
+            width: 15%;
+        }
+        .comment-list .left img {
+            border-radius: 50%;
+        }
+        .comment-list .right {
+            float: left;
+            font-size: 12px;
+            margin-left: 10px;
+            width: 75%;
+        }
+        .comment-list .date {
+            color: #999;
+            margin-top: 20px;
+        }
+        .clearfix {
+            clear: both;
+        }
+    </style>
 </head>
 <body>
     <h1>智聊系统</h1>
@@ -12,7 +61,48 @@
     <h1><?=$blog['title']?></h1>
     <p>浏览量:<span id="display"></span></p>
     <p><?=$blog['content']?></p>
+
+    <img style="cursor:pointer; width:120px;" id="btn-agree" src="/images/agree.jpg" alt="">
+
+    <div class="agree-list">
+
+        <h3>点赞列表</h3>
+        <div id="avatar-list"></div>
+        
+    </div>
+
+<div id="comment_app">
+
+    <h3>评论列表</h3>
+
+    <div v-for="(v,k) in comments" class="comment-list">
+        <div class="left">
+            <img :src="v.avatar" width="50" height="50" alt="">
+            <p> {{v.email}} </p>
+        </div>
+        <div class="right">
+            <div class="con">
+                　{{v.content}}
+            </div>
+            <div class="date">
+                {{v.created_at}}
+            </div>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+
+    <br><br>
+    <form action="">
+        <?=@csrf_field()?>
+        <textarea v-model="content" cols="60" rows="10"></textarea>
+        <br>
+        <input @click="submit" type="button" value="发表评论">
+    </form>
+
+</div>
+
     <?php view('common.footer') ?>
+
 </body>
 </html>
 
@@ -20,6 +110,10 @@
     src="https://code.jquery.com/jquery-3.3.1.min.js"
     integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
     crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
 <script>
     // 更新获取浏览量
 
@@ -59,4 +153,109 @@
             $("#menu").html(html);
        } 
     });
+    
+    $("#btn-agree").click(function(){
+        $.ajax({
+            type:"POST",
+            url:"/blog/agreements?id="+id,
+            dataType:"json",
+            success:function(data)
+            {
+                if(data.status_code == 200)
+                {
+                    alert("成功");
+                }
+                else
+                {
+                    alert(data.message);
+                }
+            }
+
+        })
+    });
+
+    $.ajax({
+        type:"GET",
+        url:"/blog/agreements_list?id="+id,
+        dataType:"json",
+        success:function(data)
+        {
+            if(data.status_code == 200)
+            {
+                var html = '';
+                for(var i=0; i<data.data.length;i++)
+                {
+                    var avatar = data.data[i].avatar ? data.data[i].avatar : '/images/avatar.jpg';
+                    html += '<img title="'+data.data[i].email+'" class="avatar" id="btn-agree" src="'+avatar+'" alt="">';
+                }
+                // 把字符串放到页面
+                $("#avatar-list").html( html );
+            }
+        }
+    });
+
+    new Vue({
+        // 挂载
+        el:"#comment_app",
+        // 定义数据
+        data:{
+            content:'',
+            blog_id:"<?=$blog['id']?>",
+            // 评论列表数据
+            comments:[
+                {
+                    email:"",
+                    avatar:"",
+                    content:"",
+                    created_at:""
+                }
+            ]
+        },
+
+        // 在创建完Vue以后执行
+        created:function(){
+            // 获取初始数据
+            axios.get('/comment/comment_list?id='+id)
+                .then(res => {
+                    if(res.data.status_code == 200)
+                    {
+                        // 把服务器返回的数据放到绑定的数组上，会自动更新到页面
+                        this.comments = res.data.data;
+                        // console.log(res.data.data);
+                    }
+                })
+        },
+        
+        // 定义函数
+        methods:{
+            submit:function()
+            {
+                // 执行ajax发表评论
+                axios.post('/comment/comments',{
+                    content:this.content,
+                    blog_id: this.blog_id
+                })
+                .then(res => {
+                    // ajax执行完之后执行这里
+                    if(res.data.status_code == 200)
+                    {
+                        // 把新发表的数据添加到数组的最前面
+                        this.comments.unshift({
+                            email:res.data.data.email,
+                            content:res.data.data.content,
+                            created_at:res.data.data.created_at,
+                            avatar:res.data.data.avatar
+                        })
+                        
+                        // 清空数据
+                        this.content = ''
+                    }
+                    else
+                    {
+                        alert(res.data.message)
+                    }
+                })
+            }
+        }
+    })
 </script>

@@ -3,8 +3,108 @@
 
     use models\Blog;
 
+    use PhpOffice\PhpSpreadsheet\Spreadsheet;
+
+    use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
     class BlogController 
     {
+        public function agreements_list()
+        {
+            $id = $_GET['id'];
+            // 获取日志所有点赞的用户
+            $model = new \models\Blog;
+            $data = $model->agreeList($id);
+
+            // 转成json返回
+            echo json_encode([
+                'status_code' => 200,
+                'data' => $data,
+            ]);
+        }
+        // 点赞
+        public function agreements()
+        {
+            $id = $_GET['id'];
+
+            // 判断是否登录
+            if(!isset($_SESSION['id']))
+            {
+                echo json_encode([
+                    'status_code' => '403',
+                    'message' => '必须先登录'
+                ]);
+                exit;
+            }
+            // 点赞
+            $model = new \models\Blog;
+            $ret = $model->hasAgreed($id);
+            if($ret)
+            {
+                echo json_encode([
+                    'status_code' => '200',
+                ]);
+                exit;
+            }
+            else
+            {
+                echo json_encode([
+                    'status_code' => '403',
+                    'message' => '已经点赞过了'
+                ]);
+                exit;
+            }
+
+        }
+        public function makeExcel()
+        {
+            // 获取当前标签页
+            $spreadsheet = new Spreadsheet();
+            // 获取当前工作
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // 设置第1行内容
+            $sheet->setCellValue('A1', '标题');
+            $sheet->setCellValue('B1', '内容');
+            $sheet->setCellValue('C1', '发表时间');
+            $sheet->setCellValue('D1', '是发公开');
+
+            // 取出数据库中的日志
+            $model = new \models\Blog;
+            // 获取最新的20个日志
+            $blogs = $model->getNew();
+
+            $i = 2;
+            foreach($blogs as $v)
+            {
+                $sheet->setCellValue('A'.$i, $v['title']);
+                $sheet->setCellValue('B'.$i, $v['content']);
+                $sheet->setCellValue('C'.$i, $v['created_at']);
+                $sheet->setCellValue('D'.$i, $v['is_show']);
+                $i++;
+            }
+            $date = date('Ymd');
+
+            // 生成excel文件
+            $write = new Xlsx($spreadsheet);
+            $write->save(ROOT.'excel/'.$date.'.xlsx');
+
+            // 下载文件路径
+            $file = ROOT . 'excel/'.$date.'.xlsx';
+            // 下载时文件名
+            $fileName = '最新的20条日志-'.$date.'.xlsx';
+            // 告诉浏览器这是一个二进程文件流    
+            Header ( "Content-Type: application/octet-stream" ); 
+            // 请求范围的度量单位  
+            Header ( "Accept-Ranges: bytes" );  
+            // 告诉浏览器文件尺寸    
+            Header ( "Accept-Length: " . filesize ( $file ) );  
+            // 开始下载，下载时的文件名
+            Header ( "Content-Disposition: attachment; filename=" . $fileName );    
+
+            // 读取服务器上的一个文件并以文件流的形式输出给浏览器
+            readfile($file);
+        }
 
         public function content()
         {

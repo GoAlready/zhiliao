@@ -6,6 +6,11 @@
     
     class UserController 
     {
+        public function setActiveUsers()
+        {
+            $user = new User;
+            $user->computeActiveUsers(); 
+        }
         public function uploadbig()
         {
             // 接收提交的数据
@@ -76,22 +81,20 @@
 
         public function setavatar()
         {
-            // 保存图片的路径
-            $uploadDir = ROOT.'public/uploads/';
-            $date = date('Ymd');
-            if(!is_dir($uploadDir.$date))
-            {
-                mkdir($uploadDir.$date);
-            }
-            // 获取文件扩展名
-            $ext = strrchr($_FILES['avatar']['name'],'.') ;  //如: .jpg
-            //生成唯一的文件名
-            $name = md5( time() . rand(1,9999) );
-            // 完整文件名
-            $fullName = $uploadDir . '/' .$date . '/' . $name .$ext;
-            // 保存图片到指定路径
-            move_uploaded_file($_FILES['avatar']['tmp_name'],$fullName);
+            $upload = \libs\Uploader::make();
+            $path = $upload->upload('avatar','avatar');
 
+            // 保存到user表中
+            $model = new \models\User;
+            $model->setAvatar('/uploads/'.$path);
+
+            // 删除原头像
+            @unlink(ROOT .'public' .  $_SESSION['avatar']);
+
+            // 设置新头像
+            $_SESSION['avatar'] = '/uploads/'.$path;
+
+            message('设置成功',2,'/blog/index');
         }
 
         public function avatar()

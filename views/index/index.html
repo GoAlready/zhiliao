@@ -19,6 +19,59 @@
         <?php endforeach; ?>
     </ul>
 
+    <h1>一周活跃用户</h1>
+    <ul>
+        <?php foreach($users as $v): ?>
+            <li>
+                <img width="50" height="50" src="<?=$v['avatar'] ? $v['avatar'] : '/images/avatar.jpg' ?>" title="<?=$v['email']?>">
+            </li>
+        <?php endforeach; ?>
+    </ul>
+
     <?php view('common.footer') ?>
+
+    <?php if(config('mode') == 'dev'): ?>
+    <select id="alluser">
+        <option value="">选择账号</option>
+    </select>
+    <?php endif; ?>
 </body>
 </html>
+<script>
+    $.ajax({
+        type:"GET",
+        url:"/tool/getAllUsers",
+        dataType:"json",
+        success:function(data)
+        {
+            if(data.status_code == 200)
+            {
+                var html = '';
+                for(var i=0;i<data.data.length;i++)
+                {
+                    html += '<option value="'+data.data[i].email+'">'+data.data[i].email+'</option>';
+                }
+                $("#alluser").append(html)
+            }
+        }
+        
+    });
+    <?php if(config('mode') == 'dev'): ?>
+    $("#alluser").change(function(){
+        // 获取选中的值
+        var email = $(this).val();
+        if(email != '')
+        {
+            $.ajax({
+               type:"GET",
+               url:"/tool/login?email="+email,
+               success:function(data)
+               {
+                    // 刷新页面
+                    location.reload();
+               }
+            });
+        }
+    });
+    <?php endif; ?>
+</script>
