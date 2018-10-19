@@ -190,7 +190,7 @@
             {
                 $blog->makeHtml($id);
             }
-
+ 
 
             // 跳转
             message('发表成功',2,'/blog/index');

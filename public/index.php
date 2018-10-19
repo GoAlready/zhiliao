@@ -76,7 +76,7 @@
         {
             $str .= "$k=$v&"; 
         }
-        return $str;
+        return $str; 
     }
 
     // 加载视图
